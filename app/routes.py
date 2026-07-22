@@ -1,9 +1,15 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from sqlalchemy import extract
 from .models import Transaction
 from . import db
 
 main = Blueprint("main", __name__)
+
+@main.route("/")
+def index():
+    """Render the GUI dashboard"""
+    return render_template("index.html")
+
 
 def validate_transaction_data(data):
     """Validate transaction input data"""

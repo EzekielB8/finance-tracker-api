@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanceTracker - Personal Finance Dashboard</title>
+    <meta name="description" content="A modern, API-powered personal finance tracker with real-time analytics, transaction management, and monthly summaries.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div class="brand-text">
+                    <h2>Finance<span>Hub</span></h2>
+                    <p>API Dashboard</p>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#overview" class="nav-link active">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#analytics" class="nav-link">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#transactions" class="nav-link">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span>Transactions</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-card">
+                <div class="card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="card-info">
+                    <h4>Backend Active</h4>
+                    <p>REST API v1.0 connected</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1>Financial Overview</h1>
+                    <p>Track, analyze, and manage your income & expenses</p>
+                </div>
+
+                <div class="header-actions">
+                    <div class="month-picker-wrapper">
+                        <i class="fa-regular fa-calendar"></i>
+                        <select id="monthFilter" class="custom-select">
+                            <option value="all">All Months</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+
+                    <button id="quickAddBtn" class="btn btn-primary">
+                        <i class="fa-solid fa-plus"></i> New Transaction
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stat Summary Cards -->
+            <section id="overview" class="stats-grid">
+                <div class="stat-card balance-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Net Balance</span>
+                        <div class="stat-icon balance"><i class="fa-solid fa-scale-balanced"></i></div>
+                    </div>
+                    <div class="stat-value" id="totalBalance">$0.00</div>
+                    <div class="stat-footer">
+                        <span id="balanceStatusBadge" class="badge positive">
+                            <i class="fa-solid fa-shield-heart"></i> Net Savings
+                        </span>
+                    </div>
+                </div>
+
+                <div class="stat-card income-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Income</span>
+                        <div class="stat-icon income"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    </div>
+                    <div class="stat-value text-income" id="totalIncome">$0.00</div>
+                    <div class="stat-footer">
+                        <span class="subtext"><span id="incomeCount">0</span> transactions</span>
+                    </div>
+                </div>
+
+                <div class="stat-card expense-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Expenses</span>
+                        <div class="stat-icon expense"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                    </div>
+                    <div class="stat-value text-expense" id="totalExpenses">$0.00</div>
+                    <div class="stat-footer">
+                        <span class="subtext"><span id="expenseCount">0</span> transactions</span>
+                    </div>
+                </div>
+
+                <div class="stat-card count-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Activity</span>
+                        <div class="stat-icon activity"><i class="fa-solid fa-list-check"></i></div>
+                    </div>
+                    <div class="stat-value" id="totalCount">0</div>
+                    <div class="stat-footer">
+                        <span class="subtext">Recorded items</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Section (Charts) -->
+            <section id="analytics" class="charts-section">
+                <div class="chart-container glass-panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-chart-pie"></i> Expense Breakdown by Category</h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="categoryChart"></canvas>
+                        <div id="noChartData" class="empty-chart-state hidden">
+                            <i class="fa-solid fa-chart-simple"></i>
+                            <p>No expense data available for chart</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container glass-panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-chart-column"></i> Cash Flow Comparison</h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="flowChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add Transaction Form Card -->
+            <section class="glass-panel form-panel">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-circle-plus"></i> Add New Transaction</h3>
+                    <span class="panel-subtext">Directly submits to Flask backend endpoint <code>/transactions</code></span>
+                </div>
+
+                <form id="transactionForm" class="transaction-form">
+                    <div class="form-row">
+                        <!-- Type Selector Toggle -->
+                        <div class="form-group">
+                            <label class="form-label">Type</label>
+                            <div class="type-toggle-group">
+                                <button type="button" class="type-btn active expense" data-type="expense">
+                                    <i class="fa-solid fa-arrow-down-long"></i> Expense
+                                </button>
+                                <button type="button" class="type-btn income" data-type="income">
+                                    <i class="fa-solid fa-arrow-up-long"></i> Income
+                                </button>
+                            </div>
+                            <input type="hidden" id="txType" name="type" value="expense">
+                        </div>
+
+                        <!-- Amount Input -->
+                        <div class="form-group">
+                            <label for="txAmount" class="form-label">Amount ($)</label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-dollar-sign"></i>
+                                <input type="number" id="txAmount" name="amount" step="0.01" min="0.01" placeholder="0.00" required>
+                            </div>
+                        </div>
+
+                        <!-- Category Select / Custom Input -->
+                        <div class="form-group">
+                            <label for="txCategory" class="form-label">Category</label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-tag"></i>
+                                <select id="txCategory" name="category" class="custom-select" required>
+                                    <option value="" disabled selected>Select category...</option>
+                                    <option value="Food">Food & Dining</option>
+                                    <option value="Salary">Salary & Wages</option>
+                                    <option value="Housing">Housing & Rent</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Bills">Utilities & Bills</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Transport">Transportation</option>
+                                    <option value="Investment">Investment & Savings</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-group form-submit-group">
+                            <button type="submit" id="submitTxBtn" class="btn btn-accent full-width">
+                                <i class="fa-solid fa-paper-plane"></i> Submit Transaction
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Transactions Table -->
+            <section id="transactions" class="glass-panel table-panel">
+                <div class="table-header-row">
+                    <div class="table-title">
+                        <h3><i class="fa-solid fa-list"></i> Transaction History</h3>
+                        <span id="filteredCountBadge" class="table-count-badge">0 items</span>
+                    </div>
+
+                    <div class="table-controls">
+                        <!-- Search Input -->
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="searchInput" placeholder="Search category or type...">
+                        </div>
+
+                        <!-- Type Filter Pills -->
+                        <div class="filter-pills">
+                            <button class="pill-btn active" data-filter="all">All</button>
+                            <button class="pill-btn" data-filter="income">Income</button>
+                            <button class="pill-btn" data-filter="expense">Expense</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th class="text-right">Amount</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTableBody">
+                            <!-- Populated dynamically via JavaScript -->
+                        </tbody>
+                    </table>
+
+                    <!-- Loading Spinner & Empty States -->
+                    <div id="tableLoading" class="state-container hidden">
+                        <div class="spinner"></div>
+                        <p>Fetching transactions from API...</p>
+                    </div>
+
+                    <div id="emptyTableState" class="state-container hidden">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <h4>No transactions found</h4>
+                        <p>Add a new transaction above or adjust your filters.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
